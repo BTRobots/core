@@ -1,0 +1,31 @@
+{
+  "lintOptions": {
+    "typeCheck:": true
+  },
+  "extends": ["tslint-config-airbnb"],
+  "rules": {
+    "import-name": false,
+    "max-line-length": { "options": [180] },
+    "no-consecutive-blank-lines": true,
+    "no-increment-decrement": false,
+    "no-irregular-whitespace": true,
+    "no-trailing-whitespace": true,
+    "no-var-keyword": true,
+    "no-var-self": false,
+    "number-literal-format": true,
+    "prefer-array-literal": false,
+    "trailing-comma": [true, { "multiline": "always", "singleline": "never" }],
+    "variable-name": [true, "check-format", "allow-pascal-case", "allow-snake-case"],
+    "whitespace": [
+      true,
+      "check-branch",
+      "check-decl",
+      "check-operator",
+      "check-module",
+      "check-seperator",
+      "check-rest-spread",
+      "check-type-operator",
+      "check-preblock"
+    ]
+  }
+}
