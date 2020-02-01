@@ -22,6 +22,7 @@
     "src/**/*"
   ],
   "exclude": [
+    "**/*.unit.ts",
     "node_modules"
   ]
 }

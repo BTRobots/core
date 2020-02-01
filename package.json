@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "setup": "npm install",
-    "build": "rollup -c",
+    "build": "npm run clean && rollup -c",
     "watch": "rollup -cw",
     "clean": "rm -rf dist/*",
     "test:unit": "jest --config jest.config.unit.js --coverage",
