@@ -11,8 +11,8 @@
     "build": "npm run clean && rollup -c",
     "watch": "rollup -cw",
     "clean": "rm -rf dist/*",
-    "test:unit": "jest --config jest.config.unit.js --coverage",
-    "test:unit:watch": "jest --config jest.config.unit.js --coverage --watch"
+    "test:unit": "jest --config jest.config.unit.js --coverage --runInBand",
+    "test:unit:watch": "jest --config jest.config.unit.js --coverage --watch --runInBand"
   },
   "repository": {
     "type": "git",

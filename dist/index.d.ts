@@ -1,1 +1,2 @@
-export declare const greet: (name: string) => string;
+import { compile } from './compiler/compile';
+export { compile, };
