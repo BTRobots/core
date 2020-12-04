@@ -273,9 +273,9 @@ export const compile = (input: CompilerInput): CompilerOutput => {
           : line).trim();
 
         // map instructions to tuple in a TypeScript-friendly way
-        const instructions = codeLine.toUpperCase()
+        const instructions = codeLine.toUpperCase().replace(',', ' ')
           .split(' ')
-          .map(token => token.replace(/[ ,]/g, ''))
+          // .map(token => token.replace(/[ ,]/g, ''))
           .filter(Boolean);
         /*const instructions: [string, string, string, string] = [
           tokens[0] || '',
