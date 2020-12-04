@@ -126,7 +126,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
         const directive = line.toUpperCase().substr(1, line.indexOf(' ') - 1);
         if (directive === DirectiveType.VARIABLE_DECLARATION) {
           debugLog('found variable definition');
-          const variableName = line.substr(5).toUpperCase();
+          const variableName = line.substr(5).toUpperCase().trim();
           // Variable Validation
           if (variableName.length > MAX_VAR_LEN) {
             throw new Error(`Variable name "${variableName}" is  ${variableName.length - MAX_VAR_LEN} characters too long!`);
@@ -405,7 +405,6 @@ export const compile = (input: CompilerInput): CompilerOutput => {
   //   throw new Error('You must supply more than just comment lines!');
   // }
 
-  // const labelLines = new Map<number, string>(Array.from(labels).map(([str, num]) => [num, str]));
   // debugLog('precomiled program before labels', precomiledProgram);
   if (debug_logging) {
     console.log(precomiledProgram.map(line => line.join(' ')).join('\n'));
@@ -417,12 +416,6 @@ export const compile = (input: CompilerInput): CompilerOutput => {
   // 0000 0000 0000 0011
   const program: CompiledProgram = precomiledProgram.map((codeTuple) => {
     debugLog('Resolving unresolved labels');
-    // if (debug_logging) {
-    //   for (const element of labels.entries()) {
-    //     console.log(element);
-    //   }
-    // }
-    
     // all strings are unresolved references
     const outTup: CompiledLine = [0, 0, codeTuple[2] as number, codeTuple[3]];
 
@@ -442,47 +435,6 @@ export const compile = (input: CompilerInput): CompilerOutput => {
       }
     }
 
-
-    // const newTuple: CompiledLine = [codeTuple[0], codeTuple[1] as number, codeTuple[2] as number, codeTuple[3]];
-    // for (let i = 0; i < MAX_OP - 1; i++) {
-    //   // is unresolved?
-    //   if (codeTuple[MAX_OP] >> (i * 4) === 3) {
-    //     // found an unresolved !label
-    //     let precomiledWord: PrecompiledWord;
-    //     switch (typeof codeTuple[i]) {
-    //       case 'number':
-    //         precomiledWord = codeTuple[i] as number;
-    //         break;
-    //       case 'string':
-    //         precomiledWord = codeTuple[i] as string;
-    //         break;
-    //       default:
-
-    //     }
-    //     ///const opcode: number = typeof codeTuple[i] === 'number'
-    //     //   ? codeTuple[i] as number
-    //     //   : stringToInt(codeTuple[i] as string);
-
-    //     // debugLog('unresolvedLabels: ', unresolvedLabels);
-    //     if (!unresolvedLabels[opcode]) {
-    //       debugLog(`label not found with opcode='${opcode}'`);
-    //       throw new Error('!label not found!');
-    //     }
-    //     //const labelLineNumber = );
-
-    //     if (opcode > MAX_CODE) {
-    //       throw new Error('!label out of range');
-    //     }
-    //     const label = labels.get(unresolvedLabels[opcode]) as number;
-
-    //     debugLog('found unresolved label: ', opcode, label);
-    //     newTuple[i] = label;
-    //     const bitmask = ~(16 << (i * 4));
-    //     newTuple[MAX_OP] = 64;//(newTuple[MAX_OP] & bitmask) | (4 << (i * 4));
-    //   } else {
-    //     newTuple[i] = codeTuple[i] as number;
-    //   }
-    // }
     return outTup;
   });
   if (debug_logging) {
