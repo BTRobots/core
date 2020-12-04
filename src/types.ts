@@ -394,6 +394,7 @@ export enum DirectiveType {
   MSG = 'MSG',
   CONFIGURATION = 'CONFIG',
   LOCK = 'LOCK',
+  END = 'END',
 }
 
 export enum ConfigurationType {

@@ -101,7 +101,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
     throw new Error('You must supply executable code!');
   }
 
-  // lineLoop
+  __lineLoop__:
   for (let lineNum = 0; lineNum < fileLines.length; lineNum++) {
     const line = fileLines[lineNum];
     checkProgramLength(precomiledProgram);
@@ -123,7 +123,8 @@ export const compile = (input: CompilerInput): CompilerOutput => {
         break;
       case LineType.DIRECTIVE:
         // Comiler Directives
-        const directive = line.toUpperCase().substr(1, line.indexOf(' ') - 1);
+        const directive = line.toUpperCase().substr(1).split(' ')[0];
+        debugLog(`found directive: ${directive}`);
         if (directive === DirectiveType.VARIABLE_DECLARATION) {
           debugLog('found variable definition');
           const variableName = line.substr(5).toUpperCase().trim();
@@ -145,6 +146,10 @@ export const compile = (input: CompilerInput): CompilerOutput => {
         if (directive === DirectiveType.LOCK) {
           // skip
           break;
+        }
+        if (directive === DirectiveType.END) {
+          debugLog('found the end - exiting!');
+          break __lineLoop__;
         }
         if (directive === DirectiveType.MSG) {
           configInput.name = line.substr(line.indexOf(' ') + 1);
