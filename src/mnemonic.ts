@@ -1,5 +1,5 @@
 import {
-  Operation,
+  Command,
 } from './types';
 import {
   operand,

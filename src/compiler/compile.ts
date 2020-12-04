@@ -1,5 +1,5 @@
 import {
-  Operation,
+  Command,
   Robot,
   Program,
   VariableMap,
@@ -7,6 +7,13 @@ import {
   CompiledLine,
   MachineCodeTuple,
   InstructionTuple,
+  DebuggingSymbols,
+  PrecompiledLine,
+  PrecompiledWord,
+  DebuggingSymbol,
+  LineType,
+  ConfigurationType,
+  DirectiveType,
 } from '../types';
 import {
   MAX_CODE,
@@ -14,47 +21,115 @@ import {
   MAX_VARS,
   MAX_VAR_LEN,
   MAX_LABELS,
+  MAX_RAM,
 } from '../constants';
 import {
-  getOperationFromCode,
+  isCommand,
+  isRegister,
+  isConstant,
+  getOpcodeMicrocodeTuple,
+  isKnownInstruction,
 } from '../OperationCodeMap';
+import {
+  getLineType,
+  isBangLabelLine,
+  isColonLabelLine,
+  isCommentLine,
+  isDirectiveLine,
+  isEmptyLine,
+  isOperationLine,
+  isPreCompiledLine,
+  validateLineSyntax,
+} from './lineUtils';
 import { replaceInvalidCharacters } from '../util/replaceInvalidCharacters';
 import { stringToInt } from '../util/stringToInt';
 import { checkProgramLength } from '../util/checkProgramLength';
 import { filterExtraneousLines } from './filterExtraneousLines';
 
-export const compile = (robot_file: string, debug = false): Robot.Config => {
+export type CompilerInput = {
+  robot_file: string;
+  emit_debug_symbols?: boolean;
+  debug_logging?: boolean;
+};
 
-  const debugLog = (...args: any) => (debug && console.log(args, null, 2));
+export type CompilerOutput = {
+  robot_config: Robot.Config;
+  debug_symbols?: DebuggingSymbols;
+};
+
+export const compile = (input: CompilerInput): CompilerOutput => {
+  const {
+    robot_file,
+    emit_debug_symbols,
+    debug_logging,
+  } = input;
+
+  const debug_symbols: DebuggingSymbols = [];
+
+  const debugLog = (...args: any) => (debug_logging && console.log(`DEBUG ${args}`));
+
+  // variables is a map of variable names and memory locations
   const variables: VariableMap = new Map();
   // Map<label name, program line number>
+
   const labels = new Map<string, number>();
+  const reverseLabels = new Map<number, string>();
+  const unresolvedLabels: string[] = [];
+
+  const setLabel = (name: string, lineNum: number) => {
+    labels.set(name, lineNum);
+    if (lineNum !== -1) {
+      // resolved
+      reverseLabels.set(lineNum, name);
+    } else {
+      unresolvedLabels.push(name);
+    }
+  };
+
   const configInput: Robot.ConfigInput = {
   };
-  const program: CompiledProgram = [];
+  const precomiledProgram: PrecompiledLine[] = [];
 
   const fileLines = robot_file
     // .toUpperCase()    // treat enitre file as uppercase
     .split(/\r?\n/g)
     .map(replaceInvalidCharacters)
-    .map(line => line.trim())
-    .filter(filterExtraneousLines);
+    .map(line => line.trim());
+    // .filter(filterExtraneousLines);
 
   if (fileLines.length === 0) {
     throw new Error('You must supply executable code!');
   }
 
-  for (const line of fileLines) {
-    checkProgramLength(program);
-    switch (line.charAt(0)) {
-      case '#': {
+  // lineLoop
+  for (let lineNum = 0; lineNum < fileLines.length; lineNum++) {
+    const line = fileLines[lineNum];
+    checkProgramLength(precomiledProgram);
+    debugLog(`line: ${lineNum}: ${line}`);
+
+    const line_type = getLineType(line);
+
+    const debug_symbol: DebuggingSymbol = {
+      line_type,
+      original_line_num: lineNum,
+      original_line_text: line,
+      compiled_line_num: null,
+    };
+    validateLineSyntax(line, line_type);
+    switch (line_type){
+      case LineType.EMPTY:
+      case LineType.COMMENT:
+        debug_symbols.push(debug_symbol);
+        break;
+      case LineType.DIRECTIVE:
         // Comiler Directives
         const directive = line.toUpperCase().substr(1, line.indexOf(' ') - 1);
-        if (directive === 'DEF') {
-          const variableName = line.substr(5);
+        if (directive === DirectiveType.VARIABLE_DECLARATION) {
+          debugLog('found variable definition');
+          const variableName = line.substr(5).toUpperCase();
           // Variable Validation
           if (variableName.length > MAX_VAR_LEN) {
-            throw new Error(`Variable name "${variableName}" is too long!`);
+            throw new Error(`Variable name "${variableName}" is  ${variableName.length - MAX_VAR_LEN} characters too long!`);
           }
           if (variables.get(variableName) !== undefined) {
             throw new Error(`Cannot redeclare variable ${variableName}`);
@@ -62,25 +137,29 @@ export const compile = (robot_file: string, debug = false): Robot.Config => {
           if (variables.size >= MAX_VARS) {
             throw new Error('Too many variables delcared!');
           }
-          variables.set(variableName, null);
+          debugLog(`setting variable definition ${variableName}`);
+          variables.set(variableName, variables.size + 128);
+
           break;
         }
-        if (directive === 'LOCK') {
+        if (directive === DirectiveType.LOCK) {
           // skip
           break;
         }
-        if (directive === 'MSG') {
+        if (directive === DirectiveType.MSG) {
           configInput.name = line.substr(line.indexOf(' ') + 1);
+          debugLog(`set robot name (message) ${configInput.name}`);
           break;
         }
-        if (directive === 'TIME') {
+        if (directive === DirectiveType.TIME_SLICE) {
           const parsedTime = parseInt(line.substr(line.indexOf(' ') + 1), 10);
           configInput.robot_time_limit = !isNaN(parsedTime) && parsedTime > 0
             ? parsedTime
             : 0;
+          debugLog(`set robot time limit ${configInput.robot_time_limit}`);
           break;
         }
-        if (directive === 'CONFIG') {
+        if (directive === DirectiveType.CONFIGURATION) {
           const [configKey, value] = line.substr(8).toUpperCase().split('=');
           const parsedValue = parseInt(value, 10);
 
@@ -93,32 +172,39 @@ export const compile = (robot_file: string, debug = false): Robot.Config => {
           switch (configKey) {
             case 'SCANNER':
               configInput.scanner = validatedValue;
+              debugLog(`set robot scanner to ${validatedValue}`);
               break;
             case 'SHIELD':
               configInput.shield = validatedValue;
+              debugLog(`set robot shield to ${validatedValue}`);
               break;
             case 'WEAPON':
               configInput.weapon = validatedValue;
+              debugLog(`set robot weapon to ${validatedValue}`);
               break;
             case 'ARMOR':
               configInput.armor = validatedValue;
+              debugLog(`set robot armor to ${validatedValue}`);
               break;
             case 'ENGINE':
               configInput.engine = validatedValue;
+              debugLog(`set robot engine to ${validatedValue}`);
               break;
             case 'HEATSINKS':
               configInput.heatsinks = validatedValue;
+              debugLog(`set robot heatsinks to ${validatedValue}`);
               break;
             case 'MINES':
               configInput.mines = validatedValue;
+              debugLog(`set robot mines to ${validatedValue}`);
               break;
             default:
+              debugLog(`received bad config value ${configKey}`);
               throw new Error(`Unknown config setting ${configKey}`);
           }
         }
         break;
-      } // end Compiler Directives
-      case '*': {
+      case LineType.PRE_COMPILED: {
         const codeLine = line.substr(1).trim();
         // Inline Pre-Compiled Machine Code
         if (codeLine.includes('*')) {
@@ -127,35 +213,31 @@ export const compile = (robot_file: string, debug = false): Robot.Config => {
         if (line.length <= 2) {
           throw new Error(`Insufficient data in data satement: ${line}`);
         }
-        const codeChunks = codeLine.split(' ').filter(Boolean);
+        const codeChunks = codeLine.split(' ');
         const programLine = [0, 0, 0, 0].map((num, index) => {
           return codeChunks[index]
           ? stringToInt(codeChunks[index])
           : 0;
-        }) as CompiledLine;
-        program.push(programLine);
+        }) as PrecompiledLine;
+        debugLog(`found precompiled machine code ${codeLine}`);
+        debugLog(`adding line to program ${programLine}`);
+        precomiledProgram.push(programLine);
         break;
       } // end Inline Pre-Compiled Machine Code
-      case ':': {
-        // :labels
-        const codeLine = line.substr(1);
-        // :labels can only be 0-9
-        if (!/\b\d+\b/.test(codeLine)) {
-          throw new Error(`Invalid label '${codeLine}': only digits allowed`);
-        }
-        program.push([stringToInt(codeLine), 0, 0, 2]);
-        break; // end :labels
-      }
-      case '!': {
+      case LineType.BANG_LABEL: {
         // !labels
         const codeLine = line.substr(1);
+        debugLog(`found !label ${codeLine}`);
+        // labels.forEach((v,k) => debugLog(v, k));
+
         // find first occurance of special character (semi-colon, comma, or space)
         const firstSpecialCharacterIndex = codeLine.match(/[;, ]/)?.index;
         const labelName = firstSpecialCharacterIndex
           ? codeLine.slice(0, firstSpecialCharacterIndex)
           : codeLine;
 
-        if (labels.get(labelName) !== undefined) {
+        const labelValue = labels.get(labelName.toUpperCase());
+        if (labelValue !== undefined && labelValue > -1) {
           // no redelcaring labels
           throw new Error(`Label '${labelName}' already defined!`);
         }
@@ -163,14 +245,27 @@ export const compile = (robot_file: string, debug = false): Robot.Config => {
           // already at maximum number of labels
           throw new Error('Too many !labels');
         }
-        /*********
-         *  TODO - make sure labels work correctly this way
-         */
-        labels.set(labelName, program.length);
-        break; // end !labels
+        debugLog(`setting !label ${labelName}`);
+        setLabel(labelName.toUpperCase(), precomiledProgram.length);
+        // precomiledProgram.push([0,0,0,0]); // labels are not included in compiled program
+        break;
+      }
+      case LineType.COLON_LABEL: {
+        // :labels
+        const codeLine = line.substr(1);
+        // :labels can only be 0-9
+        if (!/\b\d+\b/.test(codeLine)) {
+          throw new Error(`Invalid label '${codeLine}': only digits allowed`);
+        }
+        const compiledLine: PrecompiledLine = [stringToInt(codeLine), 0, 0, 2, null];
+        debugLog(`found :label ${stringToInt(codeLine)}`);
+        debugLog(`adding line to program ${compiledLine}`);
+        precomiledProgram.push(compiledLine);
+        break; // end :labels
       }
       default: {
         // instructions/numbers
+        debugLog(`found instruction line ${line}`);
 
         // remove comments
         const codeLine = (line.includes(';')
@@ -178,13 +273,17 @@ export const compile = (robot_file: string, debug = false): Robot.Config => {
           : line).trim();
 
         // map instructions to tuple in a TypeScript-friendly way
-        const tokens = codeLine.toUpperCase().split(' ');
-        const instructions: [string, string, string, string] = [
+        const instructions = codeLine.toUpperCase()
+          .split(' ')
+          .map(token => token.replace(/[ ,]/g, ''))
+          .filter(Boolean);
+        /*const instructions: [string, string, string, string] = [
           tokens[0] || '',
           tokens[1] || '',
           tokens[2] || '',
           tokens[3] || '',
-        ];
+        ];*/
+        debugLog(`found instructions [${instructions.join()}]`);
         /*
           Microcode:
               0 = instruction, number, constant
@@ -195,28 +294,206 @@ export const compile = (robot_file: string, debug = false): Robot.Config => {
             8h mask = inderect addressing (enclosed in [])
         */
 
-        // parse Instructions
-        const machineCodeTuple = instructions.map((instruction) => {
+        // parse1 Instructions
+        const machineCodeTuple: PrecompiledLine = [0, 0, 0, 0, null];
+        instructions.forEach((instruction, index) => {
+          let opcode: PrecompiledWord = 0;
+          let microcode: number = 0;
+          debugLog(`(instruction, index): ${instruction}, ${index}`);
+          if (!instruction) {
+            // machineCodeTuple[index] = opcode;
+            // machineCodeTuple[MAX_OP] = machineCodeTuple[MAX_OP] | (microcode << (index * 4));
+            return;
+          }
+
           let indirect = false;
           let modifiedInstruction = '';
           if (instruction.startsWith('[') && instruction.endsWith('[')) {
             indirect = true;
             modifiedInstruction = instruction.replace(/\[|\]/g, '');
+            debugLog('found indirect');
           } else {
             modifiedInstruction = instruction;
           }
 
-          return 0;
-        }) as MachineCodeTuple;
+          if (modifiedInstruction.startsWith('!')) {
+            const label = modifiedInstruction.slice(1).toUpperCase(); // remove exclaimation point
+            debugLog(`found !label reference for !${label}`);
+            //labels.forEach((v,k) => debugLog(v, k));
+            // look for existing !label
+            const labelOpcode = labels.get(label);
+            if (labelOpcode !== undefined) {
+              opcode = labelOpcode;
+              // label has previously been referenced 'in some way'
+              // resolved: the line where the label is defined has already been parsed
+              // unresolved: another line that references the label has been parsed, but not he lable itself
+              if (labelOpcode >= 0) {
+                // resolved !label
+                microcode = 4;
+                debugLog(`resolved label '${label}'`);
+              } else {
+                // labelOpcode = -1
+                microcode = 3;
+                opcode = labelOpcode;
+                debugLog(`unresolved label reference '${label}'`);
+              }
+            } else {
+              if (labels.size === MAX_LABELS) {
+                throw new Error(`Too many labels! (Label Limit: ${MAX_LABELS}`);
+              }
 
-        program.push(machineCodeTuple);
+              // create new label
+              // setLabel(label, -1); // we don't know which line
+              debugLog(`created new, unresolved label '${label}'`);
+              opcode = label;
+              // unresolved !label, as it hasn't been used before
+              microcode = 3;
+            }
+
+            // end !label
+          } else if (variables.get(modifiedInstruction) !== undefined) {
+            // already-defined variable, as a location in memory
+            opcode = variables.get(modifiedInstruction) as number;
+            debugLog(`found variable ${modifiedInstruction}`);
+            microcode = 1;
+          } else if (isKnownInstruction(modifiedInstruction)) {
+            debugLog(`found known instruction ${modifiedInstruction}`);
+            // instruction, constant, or register code
+            const opcodeMicrocodeTuple = getOpcodeMicrocodeTuple(modifiedInstruction);
+            debugLog(`opcodeMicrocodeTuple [${opcodeMicrocodeTuple.join(' ')}]`);
+            opcode = opcodeMicrocodeTuple[0];
+            if (opcodeMicrocodeTuple[1] !== null) {
+              microcode = opcodeMicrocodeTuple[1];
+            }
+          } else if (/\B@[\d]/.test(modifiedInstruction)) {
+            // memory address
+            try {
+              opcode = parseInt(modifiedInstruction.slice(1), 10);
+            } catch (err) {
+              throw new Error(`'Invalid memory address '${modifiedInstruction.slice(1)}'`);
+            }
+            if (opcode < 0 || opcode > (MAX_RAM + 1 + (MAX_CODE << 3) - 1)) {
+              throw new Error(`Memory address '${opcode}' out of range`);
+            }
+            microcode = 1; // variable
+          } else if (/^[\d-]/.test(modifiedInstruction)) {
+            // number
+            try {
+              opcode = stringToInt(modifiedInstruction);
+            } catch (err) {
+              throw new Error(`'Invalid number '${modifiedInstruction}'`);
+            }
+          } else {
+            throw new Error(`Undefined identifier '${modifiedInstruction}' - check your syntax for typos`);
+          }
+          machineCodeTuple[index] = opcode;
+          debugLog(`setting tuple[${index}] opcode='${opcode}'`);
+          if (indirect) {
+            microcode |= 8;
+            debugLog('indirect, microcode |= 8');
+          }
+          machineCodeTuple[MAX_OP] = machineCodeTuple[MAX_OP] | (microcode << (index * 4));
+          debugLog(`setting tuple[MAX_OP] opcode='${machineCodeTuple[MAX_OP]}'`);
+        });
+        debugLog(`setting machineCodeTuple [${machineCodeTuple.join(' ')}]`);
+        precomiledProgram.push(machineCodeTuple);
       }
     }
   }
-  return new Robot.Config({
-    ...configInput,
-    program,
+  // currently breaks tests
+  // if (program.length === 0) {
+  //   throw new Error('You must supply more than just comment lines!');
+  // }
+
+  // const labelLines = new Map<number, string>(Array.from(labels).map(([str, num]) => [num, str]));
+  // debugLog('precomiled program before labels', precomiledProgram);
+  if (debug_logging) {
+    console.log(precomiledProgram.map(line => line.join(' ')).join('\n'));
+  }
+
+  // second pass, resolving !labels
+  // replace all tuple indicies where microcode has mask
+  //                looking for 3 after shr
+  // 0000 0000 0000 0011
+  const program: CompiledProgram = precomiledProgram.map((codeTuple) => {
+    debugLog('Resolving unresolved labels');
+    // if (debug_logging) {
+    //   for (const element of labels.entries()) {
+    //     console.log(element);
+    //   }
+    // }
+    
+    // all strings are unresolved references
+    const outTup: CompiledLine = [0, 0, codeTuple[2] as number, codeTuple[3]];
+
+    for (let i = 0; i < MAX_OP - 1; i++) {
+      if (typeof codeTuple[i] === 'string') {
+        // unresolved !label
+        const lineNum = labels.get(codeTuple[i] as string);
+        debugLog(`lineNum: ${lineNum}`);
+        if (!lineNum) {
+          throw new Error(`!label not found: ${codeTuple[i]}`);
+        }
+        outTup[i] = lineNum;
+        const bitmask = ~(0xF << (i * 4));
+        outTup[MAX_OP] = (codeTuple[MAX_OP] & bitmask) | (4 << (i * 4));
+      } else {
+        outTup[i] = codeTuple[i] as number;
+      }
+    }
+
+
+    // const newTuple: CompiledLine = [codeTuple[0], codeTuple[1] as number, codeTuple[2] as number, codeTuple[3]];
+    // for (let i = 0; i < MAX_OP - 1; i++) {
+    //   // is unresolved?
+    //   if (codeTuple[MAX_OP] >> (i * 4) === 3) {
+    //     // found an unresolved !label
+    //     let precomiledWord: PrecompiledWord;
+    //     switch (typeof codeTuple[i]) {
+    //       case 'number':
+    //         precomiledWord = codeTuple[i] as number;
+    //         break;
+    //       case 'string':
+    //         precomiledWord = codeTuple[i] as string;
+    //         break;
+    //       default:
+
+    //     }
+    //     ///const opcode: number = typeof codeTuple[i] === 'number'
+    //     //   ? codeTuple[i] as number
+    //     //   : stringToInt(codeTuple[i] as string);
+
+    //     // debugLog('unresolvedLabels: ', unresolvedLabels);
+    //     if (!unresolvedLabels[opcode]) {
+    //       debugLog(`label not found with opcode='${opcode}'`);
+    //       throw new Error('!label not found!');
+    //     }
+    //     //const labelLineNumber = );
+
+    //     if (opcode > MAX_CODE) {
+    //       throw new Error('!label out of range');
+    //     }
+    //     const label = labels.get(unresolvedLabels[opcode]) as number;
+
+    //     debugLog('found unresolved label: ', opcode, label);
+    //     newTuple[i] = label;
+    //     const bitmask = ~(16 << (i * 4));
+    //     newTuple[MAX_OP] = 64;//(newTuple[MAX_OP] & bitmask) | (4 << (i * 4));
+    //   } else {
+    //     newTuple[i] = codeTuple[i] as number;
+    //   }
+    // }
+    return outTup;
   });
+  if (debug_logging) {
+    program.forEach(line => console.log(line.join(' ')));
+  }
+  return {
+    robot_config: new Robot.Config({
+      ...configInput,
+      program,
+    }),
+  };
 };
 /*
 const parseInstructions = (lineTuple: string[]) => {

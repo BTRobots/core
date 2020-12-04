@@ -9,7 +9,7 @@ export const CONFIG_EXT         = '.ats';
 export const COMPILE_EXT        = '.cmp';
 export const REPORT_EXT         = '.rep';
 export const MIN_INT            = -32768;
-export const MAX_INT            = 328787;
+export const MAX_INT            = 32767;
 
 // debugging/compiler
 export const SHOW_CODE          = false;

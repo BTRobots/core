@@ -1,151 +1,174 @@
-export type Operation =
-  'NOP' |
-  'ADD' |
-  'SUB' |
-  'OR' |
-  'AND' |
-  'XOR' |
-  'NOT' |
-  'MPY' |
-  'DIV' |
-  'MOD' |
-  'RET' |
-  'CALL' |
-  'JMP' |
-  'JLS' |
-  'JGR' |
-  'JNE' |
-  'JE' |
-  'SWAP' |
-  'DO' |
-  'LOOP' |
-  'CMP' |
-  'TEST' |
-  'MOV' |
-  'LOC' |
-  'GET' |
-  'PUT' |
-  'number' |
-  'IPO' |
-  'OPO' |
-  'DELAY' |
-  'PUSH' |
-  'POP' |
-  'ERR' |
-  'INC' |
-  'DEC' |
-  'SHL' |
-  'SHR' |
-  'ROL' |
-  'ROR' |
-  'JZ' |
-  'JNZ' |
-  'JGE' |
-  'JLE' |
-  'SAL' |
-  'SAR' |
-  'NEG' |
-  'JTL' |
-  'INT' |
-  'XXX' |
-  // extended operations
-  'RETURN' |
-  'GOSUB'  |
-  'CALL'   |
-  'JUMP'   |
-  'JB'     |
-  'GOTO'   |
-  'JA'     |
-  'JEQ'    |
-  'XCHG'   |
-  'SET'    |
-  'ADDR'   |
-  'IN'     |
-  'OUT'    |
-  'DEL'    |
-  'ERROR'  |
-  'JBE';
+export enum OperationArguments {
+  NUMBER,
+  VARIABLE,
+  REGISTER,
+  MEMORY,
+}
 
-export type Register =
-  'COLCNT'  |
-  'METERS'  |
-  'COMBASE' |
-  'COMEND'  |
-  'FLAGS'   |
-  'AX'      |
-  'BX'      |
-  'CX'      |
-  'DX'      |
-  'EX'      |
-  'FX'      |
-  'SP';
+export type NumVar = OperationArguments.NUMBER | OperationArguments.VARIABLE;
 
-export type Constant =
-'MAXINT'        |
-'MININT'        |
-'P_SPEDOMETER'  |
-'P_HEAT'        |
-'P_COMPASS'     |
-'P_TANGLE'      |
-'P_TURRET_OFS'  |
-'P_THEADING'    |
-'P_TURRET_ABS'  |
-'P_ARMOR'       |
-'P_DAMAGE'      |
-'P_SCAN'        |
-'P_ACCURACY'    |
-'P_RADAR'       |
-'P_RANDOM'      |
-'P_RAND'        |
-'P_THROTTLE'    |
-'P_TROTATE'     |
-'P_OFS_TURRET'  |
-'P_TAIM'        |
-'P_ABS_TURRET'  |
-'P_STEERING'    |
-'P_WEAP'        |
-'P_WEAPON'      |
-'P_FIRE'        |
-'P_SONAR'       |
-'P_ARC'         |
-'P_SCANARC'     |
-'P_OVERBURN'    |
-'P_TRANSPONDER' |
-'P_SHUTDOWN'    |
-'P_CHANNEL'     |
-'P_MINELAYER'   |
-'P_MINETRIGGER' |
-'P_SHIELD'      |
-'P_SHIELDS'     |
-'I_DESTRUCT'    |
-'I_RESET'       |
-'I_LOCATE'      |
-'I_KEEPSHIFT'   |
-'I_OVERBURN'    |
-'I_ID'          |
-'I_TIMER'       |
-'I_ANGLE'       |
-'I_TID'         |
-'I_TARGETID'    |
-'I_TINFO'       |
-'I_TARGETINFO'  |
-'I_GINFO'       |
-'I_GAMEINFO'    |
-'I_RINFO'       |
-'I_ROBOTINFO'   |
-'I_COLLISIONS'  |
-'I_RESETCOLCNT' |
-'I_TRANSMIT'    |
-'I_RECEIVE'     |
-'I_DATAREADY'   |
-'I_CLEARCOM'    |
-'I_KILLS'       |
-'I_DEATHS'      |
-'I_CLEARMETERS' ;
+const __Command = {
+  NOP: '',
+  ADD: '',
+  SUB: '',
+  OR: '',
+  AND: '',
+  XOR: '',
+  NOT: '',
+  MPY: '',
+  DIV: '',
+  MOD: '',
+  RET: '',
+  CALL: '',
+  JMP: '',
+  JLS: '',
+  JGR: '',
+  JNE: '',
+  JE: '',
+  SWAP: '',
+  DO: '',
+  LOOP: '',
+  CMP: '',
+  TEST: '',
+  MOV: '',
+  LOC: '',
+  GET: '',
+  PUT: '',
+  INT: '',
+  IPO: '',
+  OPO: '',
+  DELAY: '',
+  PUSH: '',
+  POP: '',
+  ERR: '',
+  INC: '',
+  DEC: '',
+  SHL: '',
+  SHR: '',
+  ROL: '',
+  ROR: '',
+  JZ: '',
+  JNZ: '',
+  JGE: '',
+  JLE: '',
+  SAL: '',
+  SAR: '',
+  NEG: '',
+  JTL: '',
+  XXX: '',
+  // extendedoperations
+  RETURN: '',
+  GOSUB: '',
+  JUMP: '',
+  JB: '',
+  GOTO: '',
+  JA: '',
+  JEQ: '',
+  XCHG: '',
+  SET: '',
+  ADDR: '',
+  IN: '',
+  OUT: '',
+  DEL: '',
+  ERROR: '',
+  JBE: '',
+};
 
-export type Word = number | string | null;
-export type ProgramLine = [Word, Word, Word, Word];
+export type Command = keyof typeof __Command;
+
+const __Register = {
+  COLCNT: '',
+  METERS: '',
+  COMBASE: '',
+  COMEND: '',
+  FLAGS: '',
+  AX: '',
+  BX: '',
+  CX: '',
+  DX: '',
+  EX: '',
+  FX: '',
+  SP: '',
+};
+export type Register = keyof typeof __Register;
+
+const __Constant = {
+  MAXINT: '',
+  MININT: '',
+  P_SPEDOMETER: '',
+  P_HEAT: '',
+  P_COMPASS: '',
+  P_TANGLE: '',
+  P_TURRET_OFS: '',
+  P_THEADING: '',
+  P_TURRET_ABS: '',
+  P_ARMOR: '',
+  P_DAMAGE: '',
+  P_SCAN: '',
+  P_ACCURACY: '',
+  P_RADAR: '',
+  P_RANDOM: '',
+  P_RAND: '',
+  P_THROTTLE: '',
+  P_TROTATE: '',
+  P_OFS_TURRET: '',
+  P_TAIM: '',
+  P_ABS_TURRET: '',
+  P_STEERING: '',
+  P_WEAP: '',
+  P_WEAPON: '',
+  P_FIRE: '',
+  P_SONAR: '',
+  P_ARC: '',
+  P_SCANARC: '',
+  P_OVERBURN: '',
+  P_TRANSPONDER: '',
+  P_SHUTDOWN: '',
+  P_CHANNEL: '',
+  P_MINELAYER: '',
+  P_MINETRIGGER: '',
+  P_SHIELD: '',
+  P_SHIELDS: '',
+  I_DESTRUCT: '',
+  I_RESET: '',
+  I_LOCATE: '',
+  I_KEEPSHIFT: '',
+  I_OVERBURN: '',
+  I_ID: '',
+  I_TIMER: '',
+  I_ANGLE: '',
+  I_TID: '',
+  I_TARGETID: '',
+  I_TINFO: '',
+  I_TARGETINFO: '',
+  I_GINFO: '',
+  I_GAMEINFO: '',
+  I_RINFO: '',
+  I_ROBOTINFO: '',
+  I_COLLISIONS: '',
+  I_RESETCOLCNT: '',
+  I_TRANSMIT: '',
+  I_RECEIVE: '',
+  I_DATAREADY: '',
+  I_CLEARCOM: '',
+  I_KILLS: '',
+  I_DEATHS: '',
+  I_CLEARMETERS: '',
+};
+
+export type Constant = keyof typeof __Constant;
+
+export type ProgramWord = number | string | null;
+export type ProgramLine = [ProgramWord, ProgramWord, ProgramWord, ProgramWord];
 export type Program = ProgramLine[];
+export type PrecompiledWord = number | string;
+export type PrecompiledLine = [
+  number, // opcode
+  PrecompiledWord, // number, variable, label reference
+  PrecompiledWord,
+  number, // microcode
+  string | null, // label, removed for compiled lines
+];
 export type CompiledLine = [number, number, number, number];
 export type CompiledProgram = CompiledLine[];
 
@@ -257,7 +280,7 @@ export type Missile = {
   max_rad: number;
 };
 
-export type Variable = number | string | boolean | null;
+export type Variable = number | null;
 export type VariableMap = Map<string, Variable>;
 
 export namespace Robot {
@@ -353,7 +376,57 @@ export namespace Options {
     max_robot_lines: number;
   };
 }
+export class LineType {}
+export namespace LineType {
+  export const EMPTY = 'EMPTY';
+  export const BANG_LABEL = 'BANG_LABEL';
+  export const COLON_LABEL = 'COLON_LABEL';
+  export const COMMENT = 'COMMENT';
+  export const PRE_COMPILED = 'PRE_COMPILED';
+  export const OPERATION = 'OPERATION';
+  export const DIRECTIVE = 'DIRECTIVE';
+  export const UNKNOWN = 'UNKNOWN';
+}
+
+export enum DirectiveType {
+  TIME_SLICE = 'TIME', // deprecated?
+  VARIABLE_DECLARATION = 'DEF',
+  MSG = 'MSG',
+  CONFIGURATION = 'CONFIG',
+  LOCK = 'LOCK',
+}
+
+export enum ConfigurationType {
+  SCANNER = 'SCANNER',
+  SHIELD = 'SHIELD',
+  WEAPON = 'WEAPON',
+  ARMOR = 'ARMOR',
+  ENGINE = 'ENGINE',
+  HEATSINKS = 'HEATSINKS',
+  MINES = 'MINES',
+}
+
+/*
+export enum InstructionType {
+  'EMPTY' = 'EMPTY',
+  'BANG_LABEL' = 'BANG_LABEL',
+  'COLON_LABEL' = 'COLON_LABEL',
+  'COMMENT' = 'COMMENT',
+  'PRE_COMPILED' = 'PRE_COMPILED',
+  'OPERATION' = 'OPERATION',
+  'DIRECTIVE' = 'DIRECTIVE',
+  'UNKNOWN' = 'UNKNOWN',
+}*/
 
 export type Instruction = string | number;
 export type InstructionTuple = [Instruction, Instruction, Instruction, Instruction];
 export type MachineCodeTuple = [number, number, number, number];
+export type DebuggingSymbol = {
+  original_line_num: number;
+  original_line_text: string;
+  compiled_line_num: number | null;
+  compiled_line_instructions?: InstructionTuple;
+  line_type: LineType,
+  instructions?: Instruction[];
+};
+export type DebuggingSymbols = DebuggingSymbol[];
