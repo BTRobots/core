@@ -196,7 +196,7 @@ describe('compiler', () => {
     it('should return the correct tuple', () => {
       expect(compile({
         ...getCompilerInput(':12334'),
-        debug_logging: true,
+        // debug_logging: true,
       }).robot_config.program).toEqual([[12334, 0, 0, 2]]);
     });
   });

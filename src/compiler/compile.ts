@@ -103,6 +103,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
 
   __lineLoop__:
   for (let lineNum = 0; lineNum < fileLines.length; lineNum++) {
+
     const line = fileLines[lineNum];
     checkProgramLength(precomiledProgram);
     debugLog(`line: ${lineNum}: ${line}`);
@@ -415,6 +416,9 @@ export const compile = (input: CompilerInput): CompilerOutput => {
     console.log(precomiledProgram.map(line => line.join(' ')).join('\n'));
   }
 
+  // fill with empty lines
+  // precomiledProgram.push([0,0,0,0,null]);
+
   // second pass, resolving !labels
   // replace all tuple indicies where microcode has mask
   //                looking for 3 after shr
@@ -424,7 +428,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
     // all strings are unresolved references
     const outTup: CompiledLine = [0, 0, codeTuple[2] as number, codeTuple[3]];
 
-    for (let i = 0; i < MAX_OP - 1; i++) {
+    for (let i = 0; i < MAX_OP ; i++) {
       if (typeof codeTuple[i] === 'string') {
         // unresolved !label
         const lineNum = labels.get(codeTuple[i] as string);
