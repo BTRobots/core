@@ -54,7 +54,7 @@
 
    ipo   7,          target      ; Scan for enemy                          5
 
-   cmp   target,     2000                                                  1
+   cmp   target,     2000        ;                                         1
    jgr   20                      ; go to 20 if no target found             0
 
    cmp   @2,         0           ; \ go to 15 if turret forwards           1

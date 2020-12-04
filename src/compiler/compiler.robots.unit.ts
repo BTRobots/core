@@ -8,17 +8,17 @@ const robotFolder = path.join(__dirname, '../../robotFiles');
 
 const dirContents: string[] = fs.readdirSync(robotFolder);
 const robotsToTest: string[] = [
-  '1blood2',
-  'assassin',
-  'barabbas',
-  'circles',
-  'coroner',
-  'dalek',
-  'firebot1',
-  'helpfire',
-  'litesout',
-  'max',
-  'mj',
+  // '1blood2',
+  // 'assassin',
+  // 'barabbas',
+  // 'circles',
+  // 'coroner',
+  // 'dalek',
+  // 'firebot1',
+  // 'helpfire',
+  // 'litesout',
+  // 'max',
+  // 'mj',
   // 'mj6',
   // 'oldfire',
   // 'overheat',
@@ -38,7 +38,7 @@ const robotsToTest: string[] = [
   // 'trapper',
   // 'ub091',
   // 'wallbomb',
-  // 'warblade',
+  'warblade',
   // 'weave',
   // 'weaver',
   // 'zitgun',
@@ -63,7 +63,7 @@ describe('compiler', () => {
       try {
         const compilerOutput = compile({
           robot_file,
-          // debug_logging: true,
+          debug_logging: true,
         });
         compilerOutput.robot_config.program.forEach((programLine, index) => {
           it(`line ${index} should equal the known output`, () => {

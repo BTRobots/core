@@ -127,7 +127,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
         debugLog(`found directive: ${directive}`);
         if (directive === DirectiveType.VARIABLE_DECLARATION) {
           debugLog('found variable definition');
-          const variableName = line.substr(5).toUpperCase().trim();
+          const variableName = line.toUpperCase().replace(`#${directive}`, '').split(' ').filter(Boolean)[0].trim();
           // Variable Validation
           if (variableName.length > MAX_VAR_LEN) {
             throw new Error(`Variable name "${variableName}" is  ${variableName.length - MAX_VAR_LEN} characters too long!`);
@@ -165,7 +165,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
           break;
         }
         if (directive === DirectiveType.CONFIGURATION) {
-          const [configKey, value] = line.substr(8).toUpperCase().split('=');
+          const [configKey, value] = line.toUpperCase().replace(`#${DirectiveType.CONFIGURATION}`, '').trim().split('=');
           const parsedValue = parseInt(value, 10);
 
           // values muse be between 0 and 5 inclusive
@@ -313,7 +313,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
 
           let indirect = false;
           let modifiedInstruction = '';
-          if (instruction.startsWith('[') && instruction.endsWith('[')) {
+          if (instruction.startsWith('[') && instruction.endsWith(']')) {
             indirect = true;
             modifiedInstruction = instruction.replace(/\[|\]/g, '');
             debugLog('found indirect');
