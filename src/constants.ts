@@ -1,6 +1,6 @@
-export const PROGNAME           = 'AT-Robots';
-export const VERSION            = '2.10';
-export const CNOTICE1           = 'Copyright 1997,99, Ed T. Toton III';
+export const PROGNAME           = 'Beyond T-Robots';
+export const VERSION            = '1.0';
+export const CNOTICE1           = 'Copyright 2020, Andrew Docherty';
 export const CNOTICE2           = 'All Rights Reserved.';
 export const MAIN_FILENAME      = 'atr2';
 export const ROBOT_EXT          = '.at2';
@@ -18,26 +18,26 @@ export const MAX_VAR_LEN        = 16;
 export const DEBUGGING_COMPILER = false;
 
 // robots
-export const MAX_ROBOTS         = 31;    // {starts at 0, so total is MAX_ROBOTS+1}
-export const MAX_CODE           = 1024;
+export const MAX_ROBOTS         = 32;    // NOW ONLY USING ZERO INDEX ///{starts at 0, so total is MAX_ROBOTS+1}
+export const CODE_SIZE          = 1024;
 export const MAX_OP             = 3;     // {etc...}
-export const MAX_STACK          = 256;   // {but not here (it's a power of two, get the idea?)}
-export const MAX_RAM            = 1023;  // {but this does start at 0 (odd #, 2^n-1)}
-export const MAX_VARS           = 256;
-export const MAX_LABELS         = 256;
+export const STACK_SIZE         = 256;   // NOW ONLY USING ZERO INDEX {but not here (it's a power of two, get the idea?)}
+export const RAM_SIZE           = 1024;  // NOW ONLY USING ZERO INDEX {but this does start at 0 (odd #, 2^n-1)}
+export const VARS_SIZE          = 256;
+export const LABELS_SIZE        = 256;
 export const ACCELERATION       = 4;
 export const TURN_RATE          = 8;
 export const MAX_VEL            = 4;
-export const MAX_MISSILES       = 1023;
+export const MISSILES_SIZE      = 1024;
 export const MISSILE_SPD        = 32;
 export const HIT_RANGE          = 14;
 export const BLAST_RADIUS       = 25;
 export const CRASH_RANGE        = 8;
 export const MAX_SONAR          = 250;
-export const COM_QUEUE          = 512;
+export const COMM_QUEUE         = 512;
 export const MAX_QUEUE          = 255;
 export const MAX_CONFIG_POINTS  = 12;
-export const MAX_MINES          = 63;
+export const MINES_SIZE         = 64;
 export const MINE_BLAST         = 35;
 
 // simulator & graphics

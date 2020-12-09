@@ -16,12 +16,12 @@ import {
   DirectiveType,
 } from '../types';
 import {
-  MAX_CODE,
+  CODE_SIZE,
   MAX_OP,
-  MAX_VARS,
+  VARS_SIZE,
   MAX_VAR_LEN,
-  MAX_LABELS,
-  MAX_RAM,
+  LABELS_SIZE,
+  RAM_SIZE,
 } from '../constants';
 import {
   isCommand,
@@ -136,7 +136,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
           if (variables.get(variableName) !== undefined) {
             throw new Error(`Cannot redeclare variable ${variableName}`);
           }
-          if (variables.size >= MAX_VARS) {
+          if (variables.size >= VARS_SIZE) {
             throw new Error('Too many variables delcared!');
           }
           debugLog(`setting variable definition ${variableName}`);
@@ -247,7 +247,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
           // no redelcaring labels
           throw new Error(`Label '${labelName}' already defined!`);
         }
-        if (labels.size === MAX_LABELS) {
+        if (labels.size === LABELS_SIZE) {
           // already at maximum number of labels
           throw new Error('Too many !labels');
         }
@@ -344,8 +344,8 @@ export const compile = (input: CompilerInput): CompilerOutput => {
                 debugLog(`unresolved label reference '${label}'`);
               }
             } else {
-              if (labels.size === MAX_LABELS) {
-                throw new Error(`Too many labels! (Label Limit: ${MAX_LABELS}`);
+              if (labels.size === LABELS_SIZE) {
+                throw new Error(`Too many labels! (Label Limit: ${LABELS_SIZE}`);
               }
 
               // create new label
@@ -378,7 +378,7 @@ export const compile = (input: CompilerInput): CompilerOutput => {
             } catch (err) {
               throw new Error(`'Invalid memory address '${modifiedInstruction.slice(1)}'`);
             }
-            if (opcode < 0 || opcode > (MAX_RAM + 1 + (MAX_CODE << 3) - 1)) {
+            if (opcode < 0 || opcode > (RAM_SIZE + 1 + (CODE_SIZE << 3) - 1)) {
               throw new Error(`Memory address '${opcode}' out of range`);
             }
             microcode = 1; // variable

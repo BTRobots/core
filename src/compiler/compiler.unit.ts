@@ -1,6 +1,6 @@
 import { compile, CompilerInput } from './compile';
 import { createEmptyCompiledProgram } from '../testUtils/createEmptyProgram';
-import { MAX_VAR_LEN, MAX_VARS, MAX_LABELS } from '../constants';
+import { MAX_VAR_LEN, VARS_SIZE, LABELS_SIZE } from '../constants';
 import { Robot, ProgramLine } from '../types';
 
 const getCompilerInput = (st: string):CompilerInput => ({
@@ -50,11 +50,11 @@ describe('compiler', () => {
         expect(() => compile(testCase)).not.toThrow();
       });
       it('should not throw when the maximum number variables have been declared', () => {
-        const testCase = getCompilerInput((new Array(MAX_VARS)).fill('').map((val, index) => `#def variable${index}`).join('\n'));
+        const testCase = getCompilerInput((new Array(VARS_SIZE)).fill('').map((val, index) => `#def variable${index}`).join('\n'));
         expect(() => compile(testCase)).not.toThrow();
       });
       it('should throw when too many variables have been declared', () => {
-        const testCase = getCompilerInput((new Array(MAX_VARS + 1)).fill('').map((val, index) => `#def variable${index}`).join('\n'));
+        const testCase = getCompilerInput((new Array(VARS_SIZE + 1)).fill('').map((val, index) => `#def variable${index}`).join('\n'));
         expect(() => compile(testCase)).toThrow();
       });
     });
@@ -212,7 +212,7 @@ describe('compiler', () => {
       })).toThrow();
     });
     it('should error if too many !labels are declared', () => {
-      expect(() => compile(getCompilerInput(Array(MAX_LABELS + 1).fill('').map((v, i) => `somelabel${i}`).join('\n')))).toThrow();
+      expect(() => compile(getCompilerInput(Array(LABELS_SIZE + 1).fill('').map((v, i) => `somelabel${i}`).join('\n')))).toThrow();
     });
     it('should return the correct compiled code', () => {
       expect(compile({ ...getCompilerInput(`

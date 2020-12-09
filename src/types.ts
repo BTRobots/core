@@ -7,7 +7,74 @@ export enum OperationArguments {
 
 export type NumVar = OperationArguments.NUMBER | OperationArguments.VARIABLE;
 
-const __Command = {
+export enum CommandEnum {
+  NOP = 0,
+  ADD = 1,
+  SUB = 2,
+  OR = 3,
+  AND = 4,
+  XOR = 5,
+  NOT = 6,
+  MPY = 7,
+  DIV = 8,
+  MOD = 9,
+  RET = 10,
+  RETURN = 10,
+  GOSUB = 11,
+  GSB = 11,
+  CALL = 11,
+  JMP = 12,
+  JUMP = 12,
+  GOTO = 12,
+  JLS = 13,
+  JB = 13,
+  JGR = 14,
+  JA = 14,
+  JNE = 15,
+  JE = 16,
+  JEQ = 16,
+  SWAP = 17,
+  XCHG = 17,
+  DO = 18,
+  LOOP = 19,
+  CMP = 20,
+  TEST = 21,
+  MOV = 22,
+  SET = 22,
+  LOC = 23,
+  ADDR = 23,
+  GET = 24,
+  PUT = 25,
+  INT = 26,
+  IPO = 27,
+  IN = 27,
+  OPO = 28,
+  OUT = 28,
+  DELAY = 29,
+  DEL = 29,
+  PUSH = 30,
+  POP = 31,
+  ERR = 32,
+  ERROR = 32,
+  INC = 33,
+  DEC = 34,
+  SHL = 35,
+  SHR = 36,
+  ROL = 37,
+  ROR = 38,
+  JZ = 39,
+  JNZ = 40,
+  JAE = 41,
+  JGE = 41,
+  JLE = 42,
+  JBE = 42,
+  SAL = 43,
+  SAR = 44,
+  NEG = 45,
+  JTL = 46,
+}
+
+const CommandMap = {
   NOP: '',
   ADD: '',
   SUB: '',
@@ -49,6 +116,7 @@ const __Command = {
   ROR: '',
   JZ: '',
   JNZ: '',
+  JGA: '',
   JGE: '',
   JLE: '',
   SAL: '',
@@ -74,9 +142,24 @@ const __Command = {
   JBE: '',
 };
 
-export type Command = keyof typeof __Command;
+export type Command = keyof typeof CommandMap;
 
-const __Register = {
+export enum RegisterEnum {
+  COLCNT = 8,
+  METERS = 9,
+  COMBASE = 10,
+  COMEND = 11,
+  FLAGS = 64,
+  AX = 65,
+  BX = 66,
+  CX = 67,
+  DX = 68,
+  EX = 69,
+  FX = 70,
+  SP = 71,
+}
+
+const RegisterMap = {
   COLCNT: '',
   METERS: '',
   COMBASE: '',
@@ -90,9 +173,73 @@ const __Register = {
   FX: '',
   SP: '',
 };
-export type Register = keyof typeof __Register;
+export type Register = keyof typeof RegisterMap;
 
-const __Constant = {
+export enum ConstantEnum {
+  MAXINT = 32767,
+  MININT = 32768,
+  P_SPEDOMETER = 1,
+  P_HEAT = 2,
+  P_COMPASS = 3,
+  P_TANGLE = 4,
+  P_TURRET_OFS = 4,
+  P_THEADING = 5,
+  P_TURRET_ABS = 5,
+  P_ARMOR = 6,
+  P_DAMAGE = 6,
+  P_SCAN = 7,
+  P_ACCURACY = 8,
+  P_RADAR = 9,
+  P_RANDOM = 10,
+  P_RAND = 10,
+  P_THROTTLE = 11,
+  P_TROTATE = 12,
+  P_OFS_TURRET = 12,
+  P_TAIM = 13,
+  P_ABS_TURRET = 13,
+  P_STEERING = 14,
+  P_WEAP = 15,
+  P_WEAPON = 15,
+  P_FIRE = 15,
+  P_SONAR = 16,
+  P_ARC = 17,
+  P_SCANARC = 17,
+  P_OVERBURN = 18,
+  P_TRANSPONDER = 19,
+  P_SHUTDOWN = 20,
+  P_CHANNEL = 21,
+  P_MINELAYER = 22,
+  P_MINETRIGGER = 23,
+  P_SHIELD = 24,
+  P_SHIELDS = 24,
+  I_DESTRUCT = 0,
+  I_RESET = 1,
+  I_LOCATE = 2,
+  I_KEEPSHIFT = 3,
+  I_OVERBURN = 4,
+  I_ID = 5,
+  I_TIMER = 6,
+  I_ANGLE = 7,
+  I_TID = 8,
+  I_TARGETID = 8,
+  I_TINFO = 9,
+  I_TARGETINFO = 9,
+  I_GINFO = 10,
+  I_GAMEINFO = 10,
+  I_RINFO = 11,
+  I_ROBOTINFO = 11,
+  I_COLLISIONS = 12,
+  I_RESETCOLCNT = 13,
+  I_TRANSMIT = 14,
+  I_RECEIVE = 15,
+  I_DATAREADY = 16,
+  I_CLEARCOM = 17,
+  I_KILLS = 18,
+  I_DEATHS = 18,
+  I_CLEARMETERS = 19,
+}
+
+const ConstantMap = {
   MAXINT: '',
   MININT: '',
   P_SPEDOMETER: '',
@@ -156,7 +303,7 @@ const __Constant = {
   I_CLEARMETERS: '',
 };
 
-export type Constant = keyof typeof __Constant;
+export type Constant = keyof typeof ConstantMap;
 
 export type ProgramWord = number | string | null;
 export type ProgramLine = [ProgramWord, ProgramWord, ProgramWord, ProgramWord];

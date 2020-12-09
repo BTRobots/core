@@ -4,7 +4,7 @@ import {
   Constant,
 } from './types';
 
-const commands: {[index: string]: number} = {
+export const CommandMap: {[index: string]: number} = {
   NOP: 0,
   ADD: 1,
   SUB: 2,
@@ -71,7 +71,7 @@ const commands: {[index: string]: number} = {
   JTL: 46,
 };
 
-const registerCodes: {[index: string]: number} = {
+export const RegisterCodeMap: {[index: string]: number} = {
   COLCNT: 8,
   METERS: 9,
   COMBASE: 10,
@@ -86,7 +86,7 @@ const registerCodes: {[index: string]: number} = {
   SP: 71,
 };
 
-const constants: {[index: string]: number} = {
+export const ConstantMap: {[index: string]: number} = {
   MAXINT: 32767,
   MININT: 32768,
   P_SPEDOMETER: 1,
@@ -151,26 +151,26 @@ const constants: {[index: string]: number} = {
 };
 
 const allInstructions = {
-  ...commands,
-  ...registerCodes,
-  ...constants,
+  ...CommandMap,
+  ...RegisterCodeMap,
+  ...ConstantMap,
 };
 
-export const isCommand = (input: string):boolean => commands.hasOwnProperty(input);
-export const isConstant = (input: string):boolean => constants.hasOwnProperty(input);
-export const isRegister = (input: string):boolean => registerCodes.hasOwnProperty(input);
+export const isCommand = (input: string):boolean => CommandMap.hasOwnProperty(input);
+export const isConstant = (input: string):boolean => ConstantMap.hasOwnProperty(input);
+export const isRegister = (input: string):boolean => RegisterCodeMap.hasOwnProperty(input);
 
 export const isKnownInstruction = (input: string) => allInstructions.hasOwnProperty(input);
 
 export const getOpcodeMicrocodeTuple = (instructionString: string): [number, 0 | 1 | null] => {
   if (isCommand(instructionString)) {
-    return [commands[instructionString], null];
+    return [CommandMap[instructionString], null];
   }
   if (isConstant(instructionString)) {
-    return [constants[instructionString], 0];
+    return [ConstantMap[instructionString], 0];
   }
   if (isRegister(instructionString)) {
-    return [registerCodes[instructionString], 1];
+    return [RegisterCodeMap[instructionString], 1];
   }
   throw new Error(`Invalid command '${instructionString}'`);
 };
